@@ -29,10 +29,11 @@ const style = {
 }
 
 export default function Home() {
-  // We'll add our component logic here
   const [inventory, setInventory] = useState([])
   const [open, setOpen] = useState(false)
   const [itemName, setItemName] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState([])
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, 'inventory'))
@@ -42,12 +43,13 @@ export default function Home() {
       inventoryList.push({ name: doc.id, ...doc.data() })
     })
     setInventory(inventoryList)
+    setSearchResults(inventoryList) // Initialize search results
   }
-  
+
   useEffect(() => {
     updateInventory()
   }, [])
-  
+
   const addItem = async (item) => {
     const docRef = doc(collection(firestore, 'inventory'), item.trim().toLowerCase())
     const docSnap = await getDoc(docRef)
@@ -59,7 +61,7 @@ export default function Home() {
     }
     await updateInventory()
   }
-  
+
   const removeItem = async (item) => {
     const docRef = doc(collection(firestore, 'inventory'), item.trim().toLowerCase())
     const docSnap = await getDoc(docRef)
@@ -73,9 +75,16 @@ export default function Home() {
     }
     await updateInventory()
   }
-  
+
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
+
+  const handleSearch = () => {
+    const filteredItems = inventory.filter(item =>
+      item.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
+    )
+    setSearchResults(filteredItems)
+  }
 
   return (
     <Box
@@ -119,10 +128,23 @@ export default function Home() {
           </Stack>
         </Box>
       </Modal>
-      <Button variant="contained" onClick={handleOpen}>
-        Add New Item
-      </Button>
-      <Box border={'1px solid #333'}>
+      <Stack direction={'row'} spacing={2} alignItems={'center'} sx={{width: '42%'}}>
+        <TextField
+          id="search-field"
+          label="Search"
+          variant="outlined"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          fullWidth
+        />
+        <Button variant="contained" onClick={handleSearch} sx={{width: '30%'}}>
+          Search
+        </Button>
+        <Button variant="contained" onClick={handleOpen} sx={{width: '50%'}}>
+          Add New Item
+        </Button>
+      </Stack>
+      <Box border={'1px solid #333'} marginTop={2}>
         <Box
           width="800px"
           height="100px"
@@ -136,31 +158,36 @@ export default function Home() {
           </Typography>
         </Box>
         <Stack width="800px" height="300px" spacing={2} overflow={'auto'}>
-          {inventory.map(({name, quantity}) => (
-            <Box
-              key={name}
-              width="100%"
-              minHeight="150px"
-              display={'flex'}
-              justifyContent={'space-between'}
-              alignItems={'center'}
-              bgcolor={'#f0f0f0'}
-              paddingX={5}
-            >
-              <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
-                {name.charAt(0).toUpperCase() + name.slice(1)}
-              </Typography>
-              <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
-                Quantity: {quantity}
-              </Typography>
-              <Button variant="contained" onClick={() => removeItem(name)}>
-                Remove
-              </Button>
-            </Box>
-          ))}
+          {searchResults.length > 0 ? (
+            searchResults.map(({name, quantity}) => (
+              <Box
+                key={name}
+                width="100%"
+                minHeight="150px"
+                display={'flex'}
+                justifyContent={'space-between'}
+                alignItems={'center'}
+                bgcolor={'#f0f0f0'}
+                paddingX={5}
+              >
+                <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
+                  {name.charAt(0).toUpperCase() + name.slice(1)}
+                </Typography>
+                <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
+                  Quantity: {quantity}
+                </Typography>
+                <Button variant="contained" onClick={() => removeItem(name)}>
+                  Remove
+                </Button>
+              </Box>
+            ))
+          ) : (
+            <Typography variant={'h6'} color={'#333'} textAlign={'center'}>
+              No items found
+            </Typography>
+          )}
         </Stack>
       </Box>
     </Box>
   )
 }
-
