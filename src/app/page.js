@@ -45,7 +45,7 @@ export default function Home() {
       inventoryList.push({ name: doc.id, ...doc.data() })
     })
     setInventory(inventoryList)
-    setSearchResults(inventoryList) // Initialize search results
+    setSearchResults(inventoryList)
   }
 
   useEffect(() => {
