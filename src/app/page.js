@@ -135,7 +135,7 @@ export default function Home() {
       alignItems={'center'}
       gap={2}
     >
-      <Box display="flex" justifyContent="space-between" width="100%" padding={2}>
+      <Box display="flex" justifyContent="center" width="100%" padding={2}>
         {user ? (
           <Button variant="contained" onClick={handleLogout}>
             Logout
